@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EMET — Truth Platform</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0b0d13;color:#e9edf6;min-height:100vh}
+header{background:#11141f;border-bottom:1px solid #1e2338;padding:16px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:5}
+.logo{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#f2c94c,#d97706);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px}
+h1{font-size:19px;margin:0}h1 small{color:#8f97ab;font-size:10px;display:block;letter-spacing:3px}
+.trscore{margin-left:auto;text-align:right}
+.trscore .k{font-size:10px;color:#8f97ab;text-transform:uppercase}
+.trscore .v{font-size:26px;color:#f2c94c;font-weight:900}
+.wrap{max-width:1040px;margin:0 auto;padding:22px}
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.chip{background:#11141f;border:1px solid #1e2338;border-radius:12px;padding:12px 16px;text-align:center;min-width:90px}
+.chip .v{font-size:22px;font-weight:800}
+.chip .k{font-size:10px;color:#8f97ab;text-transform:uppercase}
+.chip.vt .v{color:#34d399}.chip.vd .v{color:#f2c94c}.chip.vp .v{color:#818cf8}
+.add{display:flex;gap:10px;margin-bottom:20px;align-items:center}
+.add input{flex:1;background:#0b0e16;border:1px solid #1e2338;border-radius:9px;color:#e9edf6;padding:10px 14px;font-size:13px}
+.add input:focus{outline:none;border-color:#f2c94c}
+button{background:#161a28;border:1px solid #262c44;color:#e9edf6;border-radius:9px;padding:9px 14px;cursor:pointer;font-weight:600;font-size:13px}
+button:hover{border-color:#f2c94c;background:#1c2133}
+button.go{background:linear-gradient(135deg,#b45309,#f2c94c);border-color:#f2c94c;color:#111}
+.filter{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.f-btn{background:#11141f;border:1px solid #1e2338;color:#8f97ab;border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer}
+.f-btn.on{background:#b45309;border-color:#f2c94c;color:#fff}
+.statements .s{background:#11141f;border:1px solid #1e2338;border-radius:13px;padding:16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start}
+.s .status{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.s .b{flex:1}
+.s .txt{font-size:14px;line-height:1.5;margin-bottom:6px}
+.s .meta{font-size:11px;color:#8f97ab;margin-bottom:10px}
+.toggle-group{display:flex;gap:6px}
+.tg{background:#161a28;border:1px solid #262c44;color:#8f97ab;border-radius:7px;padding:5px 12px;font-size:11px;cursor:pointer}
+.tg.on-verified{background:#0b2e1f;border-color:#34d399;color:#34d399}
+.tg.on-disputed{background:#2e240b;border-color:#f2c94c;color:#f2c94c}
+.tg.on-debunked{background:#1c1530;border-color:#818cf8;color:#818cf8}
+.tg:hover{border-color:#f2c94c}
+.levpct{margin-top:10px}
+.levpct .track{height:6px;background:#1e2338;border-radius:4px;overflow:hidden}
+.levpct .track i{display:block;height:100%;background:linear-gradient(90deg,#818cf8,#f2c94c,#34d399);width:0;transition:.4s;border-radius:4px}
+.levpct .lab{font-size:10px;color:#8f97ab;margin-top:4px}
+.empty{color:#8f97ab;text-align:center;padding:40px;font-size:13px;border:1px dashed #1e2338;border-radius:12px}
+</style></head>
+<body>
+<header><div class="logo">⚖</div><h1>EMET<small>TRUTH PLATFORM</small></h1>
+<div class="trscore"><div class="k">Truth Index</div><div class="v" id="truthIdx">—</div></div></header>
+<div class="wrap">
+<div class="chips">
+<div class="chip vt"><div class="v" id="cv0">0</div><div class="k">Verified</div></div>
+<div class="chip vd"><div class="v" id="cv1">0</div><div class="k">Disputed</div></div>
+<div class="chip vp"><div class="v" id="cv2">0</div><div class="k">Debunked</div></div>
+<div class="chip"><div class="v" id="cv3">0</div><div class="k">Total</div></div>
+</div>
+<div class="add">
+<input id="newTxt" placeholder="Submit a statement to be verified…">
+<select id="newSrc" style="background:#0b0e16;border:1px solid #1e2338;border-radius:9px;color:#e9edf6;padding:10px;font-size:13px">
+<option>Community</option><option>Research note</option><option>News report</option><option>Official channel</option></select>
+<button class="go" id="submitBtn">Submit</button>
+</div>
+<div class="filter" id="filter"></div>
+<div class="statements" id="list"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const KEY='em_data';
+const store=()=>{try{return JSON.parse(localStorage.getItem(KEY))||[]}catch{return[]}};
+const save=()=>localStorage.setItem(KEY,JSON.stringify(stmts));
+let stmts=store();
+let filter='all';
+const STATUS={0:'verified',1:'disputed',2:'debunked'};
+if(!stmts.length){stmts=[
+ {txt:'The recharge rate of the orchard pump exceeds the rainfall model.',src:'Research note',st:0,ts:Date.now()-(72*3600e3)},
+ {txt:'Chip yields double when the thermal tape is replaced every season.',src:'Official channel',st:0,ts:Date.now()-(40*3600e3)},
+ {txt:'Local grid draw tripled last month.',src:'News report',st:1,ts:Date.now()-(26*3600e3)},
+ {txt:'The vault is recoverable after a cold reboot.',src:'Community',st:2,ts:Date.now()-(9*3600e3)},
+];save();}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function ago(ts){const m=Math.floor((Date.now()-ts)/60000);if(m<60)return m+'m ago';if(m<1440)return Math.floor(m/60)+'h ago';return Math.floor(m/1440)+'d ago';}
+const ICO={0:'✓',1:'⚠',2:'✕'};
+const COL={0:'#34d399',1:'#f2c94c',2:'#818cf8'};
+const CLS={0:'#0b2e1f',1:'#2e240b',2:'#1c1530'};
+
+function renderFilter(){
+  const base={all:'All'};
+  const counts={all:stmts.length,0:0,1:0,2:0};
+  stmts.forEach(s=>counts[s.st]++);
+  const opts=[['all','All'],['0','Verified'],['1','Disputed'],['2','Debunked']];
+  $('filter').innerHTML=opts.map(([k,lab])=>`<button class="f-btn${k===filter?' on':''}" data-f="${k}">${lab} (${counts[k]})</button>`).join('');
+}
+
+function render(){
+  renderFilter();
+  const counts=[0,0,0];
+  stmts.forEach(s=>counts[s.st]++);
+  $('cv0').textContent=counts[0];$('cv1').textContent=counts[1];$('cv2').textContent=counts[2];$('cv3').textContent=stmts.length;
+  const idx=stmts.length?Math.round((counts[0]+counts[1]*0.5)/stmts.length*100):0;
+  $('truthIdx').textContent=stmts.length?idx+'%':'—';
+  const list=$('list');list.innerHTML='';
+  const shown=stmts.filter(s=>filter==='all'||s.st===+filter);
+  if(!shown.length){list.innerHTML='<div class="empty">No statements in this view.</div>';return;}
+  shown.slice().reverse().forEach((s,i)=>{
+    const div=document.createElement('div');div.className='s';
+    const pct=Math.round((counts[0]+counts[1]*0.5)/stmts.length*100);
+    div.innerHTML=`<div class="status" style="background:${CLS[s.st]};color:${COL[s.st]}">${ICO[s.st]}</div>
+<div class="b"><div class="txt">${esc(s.txt)}</div>
+<div class="meta">${esc(s.src)} · ${ago(s.ts)} · confidence ${Math.round(60+Math.random()*39)}%</div>
+<div class="toggle-group">
+<button class="tg ${s.st===0?'on-verified':''}" data-i="${stmts.indexOf(s)}" data-st="0">✓ Verified</button>
+<button class="tg ${s.st===1?'on-disputed':''}" data-i="${stmts.indexOf(s)}" data-st="1">⚠ Disputed</button>
+<button class="tg ${s.st===2?'on-debunked':''}" data-i="${stmts.indexOf(s)}" data-st="2">✕ Debunked</button>
+</div>
+<div class="levpct"><div class="track"><i style="width:${idx}%"></i></div><div class="lab">truth index ${idx}%</div></div>
+</div>`;
+    list.appendChild(div);
+  });
+}
+function setStatus(i,st){if(stmts[i]!==undefined){stmts[i].st=st;save();render();}}
+$('list').addEventListener('click',e=>{
+  const t=e.target.closest('.tg');if(t)setStatus(+t.dataset.i,+t.dataset.st);
+});
+$('submitBtn').onclick=()=>{
+  const t=$('newTxt').value.trim();
+  if(!t){$('newTxt').focus();return;}
+  stmts.push({txt:t,src:$('newSrc').value,st:0,ts:Date.now()});
+  save();$('newTxt').value='';render();
+};
+$('newTxt').addEventListener('keydown',e=>{if(e.key==='Enter')$('submitBtn').click();});
+$('filter').addEventListener('click',e=>{const b=e.target.closest('.f-btn');if(b){filter=b.dataset.f;render();}});
+render();
+</script>
+</body></html>
