@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head>
+<link rel="icon" href="data:,"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EMET — Truth Platform</title>
 <style>
 :root{color-scheme:dark}*{box-sizing:border-box}
@@ -44,16 +45,17 @@ button.go{background:linear-gradient(135deg,#b45309,#f2c94c);border-color:#f2c94
 </style></head>
 <body>
 <header><div class="logo">⚖</div><h1>EMET<small>TRUTH PLATFORM</small></h1>
-<div class="trscore"><div class="k">Truth Index</div><div class="v" id="truthIdx">—</div></div></header>
+<div class="trscore"><div class="k">User Label Mix</div><div class="v" id="truthIdx">—</div></div></header>
+<div role="note" style="margin:8px 14px;padding:10px 14px;background:#252116;color:#fef3c7;border:1px solid #80651e;border-radius:8px;font-size:12px">USER-LABELED STATEMENTS: this page stores statements in this browser and lets users assign labels. It does not independently verify claims, consult authoritative sources, or produce an objective truth score.</div>
 <div class="wrap">
 <div class="chips">
-<div class="chip vt"><div class="v" id="cv0">0</div><div class="k">Verified</div></div>
-<div class="chip vd"><div class="v" id="cv1">0</div><div class="k">Disputed</div></div>
-<div class="chip vp"><div class="v" id="cv2">0</div><div class="k">Debunked</div></div>
+<div class="chip vt"><div class="v" id="cv0">0</div><div class="k">User-marked verified</div></div>
+<div class="chip vd"><div class="v" id="cv1">0</div><div class="k">User-marked disputed</div></div>
+<div class="chip vp"><div class="v" id="cv2">0</div><div class="k">User-marked debunked</div></div>
 <div class="chip"><div class="v" id="cv3">0</div><div class="k">Total</div></div>
 </div>
 <div class="add">
-<input id="newTxt" placeholder="Submit a statement to be verified…">
+<input id="newTxt" placeholder="Add a statement to label…">
 <select id="newSrc" style="background:#0b0e16;border:1px solid #1e2338;border-radius:9px;color:#e9edf6;padding:10px;font-size:13px">
 <option>Community</option><option>Research note</option><option>News report</option><option>Official channel</option></select>
 <button class="go" id="submitBtn">Submit</button>
@@ -68,7 +70,7 @@ const store=()=>{try{return JSON.parse(localStorage.getItem(KEY))||[]}catch{retu
 const save=()=>localStorage.setItem(KEY,JSON.stringify(stmts));
 let stmts=store();
 let filter='all';
-const STATUS={0:'verified',1:'disputed',2:'debunked'};
+const STATUS={0:'user-labeled verified',1:'user-labeled disputed',2:'user-labeled debunked'};
 if(!stmts.length){stmts=[
  {txt:'The recharge rate of the orchard pump exceeds the rainfall model.',src:'Research note',st:0,ts:Date.now()-(72*3600e3)},
  {txt:'Chip yields double when the thermal tape is replaced every season.',src:'Official channel',st:0,ts:Date.now()-(40*3600e3)},
@@ -85,7 +87,7 @@ function renderFilter(){
   const base={all:'All'};
   const counts={all:stmts.length,0:0,1:0,2:0};
   stmts.forEach(s=>counts[s.st]++);
-  const opts=[['all','All'],['0','Verified'],['1','Disputed'],['2','Debunked']];
+  const opts=[['all','All'],['0','User-marked verified'],['1','User-marked disputed'],['2','User-marked debunked']];
   $('filter').innerHTML=opts.map(([k,lab])=>`<button class="f-btn${k===filter?' on':''}" data-f="${k}">${lab} (${counts[k]})</button>`).join('');
 }
 
@@ -104,13 +106,13 @@ function render(){
     const pct=Math.round((counts[0]+counts[1]*0.5)/stmts.length*100);
     div.innerHTML=`<div class="status" style="background:${CLS[s.st]};color:${COL[s.st]}">${ICO[s.st]}</div>
 <div class="b"><div class="txt">${esc(s.txt)}</div>
-<div class="meta">${esc(s.src)} · ${ago(s.ts)} · confidence ${Math.round(60+Math.random()*39)}%</div>
+<div class="meta">${esc(s.src)} · ${ago(s.ts)} · user label · not independently checked</div>
 <div class="toggle-group">
-<button class="tg ${s.st===0?'on-verified':''}" data-i="${stmts.indexOf(s)}" data-st="0">✓ Verified</button>
-<button class="tg ${s.st===1?'on-disputed':''}" data-i="${stmts.indexOf(s)}" data-st="1">⚠ Disputed</button>
-<button class="tg ${s.st===2?'on-debunked':''}" data-i="${stmts.indexOf(s)}" data-st="2">✕ Debunked</button>
+<button class="tg ${s.st===0?'on-verified':''}" data-i="${stmts.indexOf(s)}" data-st="0">✓ Mark Verified</button>
+<button class="tg ${s.st===1?'on-disputed':''}" data-i="${stmts.indexOf(s)}" data-st="1">⚠ Mark Disputed</button>
+<button class="tg ${s.st===2?'on-debunked':''}" data-i="${stmts.indexOf(s)}" data-st="2">✕ Mark Debunked</button>
 </div>
-<div class="levpct"><div class="track"><i style="width:${idx}%"></i></div><div class="lab">truth index ${idx}%</div></div>
+<div class="levpct"><div class="track"><i style="width:${idx}%"></i></div><div class="lab">user-label mix ${idx}%</div></div>
 </div>`;
     list.appendChild(div);
   });
